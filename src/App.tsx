@@ -1,10 +1,22 @@
 import * as React from "react";
-export interface HelloWorldProps {
-  userName: string;
-  lang: string;
-}
-export const App = (props: HelloWorldProps) => (
-  <h1>
-    Hello {props.userName} from React! Welcome to {props.lang}!
-  </h1>
-);
+import { UserCombo } from './components/UserCombo';
+import mainReducer from './state/reducer';
+import { initialState } from './state/constants';
+import { AppContext } from './state/context'
+import {Index} from './components/buildings';
+
+export const App = () => {
+
+  const [state, dispatch] = React.useReducer(mainReducer, initialState);
+
+  return (
+    <AppContext.Provider
+      value={{
+        state,
+        dispatch
+      }}>
+        <UserCombo />
+        <Index />
+    </AppContext.Provider>
+  )
+};
