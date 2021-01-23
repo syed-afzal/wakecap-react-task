@@ -1,13 +1,32 @@
 import React, { useEffect, useState, useContext } from 'react';
-// @ts-ignore
 import {
-    Container, Grid, Typography, Button, FormGroup,
-    FormControl, FormLabel, TextField, Select, MenuItem, InputLabel
+    Container, Button,
+    FormControl, FormLabel, TextField, Select, MenuItem, InputLabel, Grid
 } from '@material-ui/core';
 import * as data from './../../data/countriesList.json';
 import { AppContext } from '../../state/context';
+import { Building } from '../../models';
+import { Types } from '../../state/constants';
+import { makeStyles } from '@material-ui/core/styles';
 
-const AddBuilding = () => {
+const useStyles = makeStyles((theme) => ({
+    row: {
+        marginTop: theme.spacing(1)
+    },
+    buttonRow: {
+        position: 'absolute', 
+        bottom: 40, 
+        right: 8
+    }
+}));
+
+interface BuildingProps {
+    formType: string,
+    formData?: Building,
+    clickHandler: (event: React.MouseEvent<HTMLButtonElement>) => void
+}
+
+const AddBuilding: React.FC<BuildingProps> = (props) => {
 
     const [addBuildingState, setAddBuildingState] = useState({
         locations: [],
@@ -16,53 +35,107 @@ const AddBuilding = () => {
     });
     const { locationId, locations, buildingName } = addBuildingState;
     const { state, dispatch } = useContext(AppContext);
+    const classes = useStyles();
 
     useEffect(() => {
-        data && data.locations && setAddBuildingState((prevState) => ({ ...prevState, locations: data.locations }))
+        data?.locations && setAddBuildingState((prevState) => ({ ...prevState, locations: data.locations }))
     }, []);
 
+    useEffect(() => {
+        props?.formType === 'edit' && setAddBuildingState((prevState) => ({ ...prevState, buildingName: props?.formData?.name, locationId: props?.formData?.locationId }));
+    }, [props?.formType]);
+
     const handleSubmit = () => {
-        dispatch({
-            type: 'CREATE',
-            payload: {
-                id: `building-${state.buildings.length + 1}`,
-                name: buildingName,
-                userId: state.selectedUser,
-                locationId: locationId
-            }
-        })
+        props?.formType === 'add' ?
+            dispatch({
+                type: Types.CREATE,
+                payload: {
+                    id: `building-${state.buildings.filter(x => x.userId === state.selectedUser).length + 1}`,
+                    name: buildingName,
+                    userId: state.selectedUser,
+                    locationId: locationId
+                }
+            }) : dispatch({
+                type: Types.EDIT,
+                payload: {
+                    id: props?.formData?.id,
+                    name: buildingName,
+                    userId: state.selectedUser,
+                    locationId: locationId
+                }
+            })
+        setAddBuildingState((prevState) => ({ ...prevState, buildingName: '', locationId: '' }));
+        props?.clickHandler;
     }
 
     return (
-        <Container>
-            <FormGroup>
-                <FormControl>
-                    <FormLabel component="legend"> Name </FormLabel>
-                    <TextField variant="outlined" value={buildingName}
-                        onChange={(e: React.ChangeEvent<{ value: string }>) => {
-                            e.persist();
-                            setAddBuildingState((prevState) => ({ ...prevState, buildingName: e.target.value }))
-                        }} />
-                </FormControl>
-                <FormControl>
-                    <FormLabel component="legend"> Location </FormLabel>
-                    <InputLabel htmlFor="grouped-native-select">Select Location</InputLabel>
-                    <Select
-                        value={locationId}
-                        variant="outlined"
-                        onChange={(e: React.ChangeEvent<{ value: string }>) => {
-                            setAddBuildingState((prevState) => ({ ...prevState, locationId: e.target.value }))
-                        }}
+        <Container style={{position: 'relative', height: '100%'}}>
+            <Grid container className={classes.row}>
+                <Grid item xs={3}>
+                    <FormControl>
+                        <FormLabel component="legend"> Name </FormLabel>
+
+                    </FormControl>
+                </Grid>
+                <Grid item xs={5}>
+                    <FormControl fullWidth>
+                        <TextField 
+                            variant="outlined" 
+                            value={buildingName}
+                            onChange={(e: React.ChangeEvent<{ value: string }>) => {
+                                e.persist();
+                                setAddBuildingState((prevState) => ({ ...prevState, buildingName: e.target.value }))
+                            }} 
+                            />
+                    </FormControl>
+                </Grid>
+            </Grid>
+            <Grid container className={classes.row}>
+                <Grid item xs={3}>
+                    <FormControl>
+                        <FormLabel component="legend"> Location </FormLabel>
+                    </FormControl>
+                </Grid>
+                <Grid item xs={5}>
+                    <FormControl fullWidth>
+                        <InputLabel htmlFor="grouped-native-select">Select Location</InputLabel>
+                        <Select
+                            value={locationId}
+                            variant="outlined"
+                            onChange={(e: React.ChangeEvent<{ value: string }>) => {
+                                setAddBuildingState((prevState) => ({ ...prevState, locationId: e.target.value }))
+                            }}
+                        >
+                            {
+                                locations.length && locations.map(loc => {
+                                    return <MenuItem key={loc.id} value={loc.id}> {loc.name} </MenuItem>
+                                })
+                            }
+                        </Select>
+                    </FormControl>
+                </Grid>
+            </Grid>
+            <Grid container justify="flex-end" className={classes.buttonRow} >
+                <Grid item>
+                    <Button 
+                        variant="outlined" 
+                        style={{marginRight: 8}}
+                        onClick={props?.clickHandler}
+                    >
+                        CANCEL
+                    </Button>
+                    <Button 
+                        variant="contained"
+                        onClick={handleSubmit} 
+                        disabled={!(locationId && buildingName)}
+                        color="primary" 
                     >
                         {
-                            locations.length && locations.map(loc => {
-                                return <MenuItem key={loc.id} value={loc.id}> {loc.name} </MenuItem>
-                            })
+                            props.formType === 'add' ? 'CREATE' : 'EDIT'
                         }
-                    </Select>
-                </FormControl>
-            </FormGroup>
-            <Button variant="outlined" onClick={handleSubmit} > CREATE </Button>
+                    </Button>
+                </Grid>
+            </Grid>
         </Container>
     )
 }

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { UserCombo } from './components/UserCombo';
+import { UserCombo } from './components/user/UserCombo';
 import mainReducer from './state/reducer';
 import { initialState } from './state/constants';
 import { AppContext } from './state/context'

@@ -6,6 +6,6 @@ export interface User {
 export interface Building {
     id: number,
     name: string,
-    userId: number,
-    locationId: number
+    userId: string,
+    locationId: string
 }

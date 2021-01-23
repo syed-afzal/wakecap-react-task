@@ -15,6 +15,15 @@ const buildingReducer = (state: Building[], action: any) => {
       return [
         ...state.filter(building => building.id !== action.payload.id),
       ]
+    case 'EDIT':
+      const updatedBuilding = action.payload;
+
+      const updatedBuildings = state.map(building => {
+        if (building.id === updatedBuilding.id)
+            return updatedBuilding;
+        else return building;
+      });
+      return updatedBuildings;
     default:
       return state;
   }
