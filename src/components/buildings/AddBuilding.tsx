@@ -17,6 +17,13 @@ const useStyles = makeStyles((theme) => ({
         position: 'absolute', 
         bottom: 40, 
         right: 8
+    },
+    container: {
+        position: 'relative',
+        height: '100%'
+    },
+    cancel: {
+        marginRight: 8
     }
 }));
 
@@ -45,7 +52,7 @@ const AddBuilding: React.FC<BuildingProps> = (props) => {
         props?.formType === 'edit' && setAddBuildingState((prevState) => ({ ...prevState, buildingName: props?.formData?.name, locationId: props?.formData?.locationId }));
     }, [props?.formType]);
 
-    const handleSubmit = () => {
+    const handleSubmit = (e: any) => {
         props?.formType === 'add' ?
             dispatch({
                 type: Types.CREATE,
@@ -65,11 +72,11 @@ const AddBuilding: React.FC<BuildingProps> = (props) => {
                 }
             })
         setAddBuildingState((prevState) => ({ ...prevState, buildingName: '', locationId: '' }));
-        props?.clickHandler;
+        props?.clickHandler(e);
     }
 
     return (
-        <Container style={{position: 'relative', height: '100%'}}>
+        <Container className={classes.container}>
             <Grid container className={classes.row}>
                 <Grid item xs={3}>
                     <FormControl>
@@ -119,7 +126,7 @@ const AddBuilding: React.FC<BuildingProps> = (props) => {
                 <Grid item>
                     <Button 
                         variant="outlined" 
-                        style={{marginRight: 8}}
+                        className={classes.cancel}
                         onClick={props?.clickHandler}
                     >
                         CANCEL

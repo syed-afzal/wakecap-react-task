@@ -1,11 +1,11 @@
-import React, { useState, useContext } from 'react';
-import { Container, Grid, Typography, AppBar, Button, IconButton } from '@material-ui/core';
+import React, { useState, useContext, useEffect } from 'react';
+import { Container, Grid, Typography, AppBar, Button } from '@material-ui/core';
 import DeleteIcon from '@material-ui/icons/Delete';
 import EditIcon from '@material-ui/icons/Edit';
 import { makeStyles } from '@material-ui/core/styles';
 import AddBuilding from './AddBuilding';
 import { AppContext } from '../../state/context';
-
+import Map from './../map';
 
 const useStyles = makeStyles(() => ({
     container: {
@@ -42,6 +42,9 @@ const useStyles = makeStyles(() => ({
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
+    },
+    buildingText: {
+        marginLeft: 8
     }
 }));
 
@@ -51,24 +54,41 @@ export const Index = () => {
     const [buildingState, setBuildingState] = useState({
         viewType: '',
         formType: '',
-        selectedBuilding: null
+        selectedBuilding: null,
+        selectedUserBuildings: [],
+        map: {}
     });
-    const { formType, viewType, selectedBuilding } = buildingState
+    const { formType, viewType, selectedBuilding, selectedUserBuildings } = buildingState
     const { state, dispatch } = useContext(AppContext);
 
-    const handleDelete = (id: number) => {
+    useEffect(() => {
+        setBuildingState((prevState) => ({ ...prevState, selectedUserBuildings: state.buildings.filter(x => x.userId === state.selectedUser) }))
+    }, [state.buildings, state.selectedUser]);
+
+    useEffect(() => {
+        if (selectedUserBuildings.length > 0) {
+            setBuildingState((prevState) => ({ ...prevState, selectedBuilding: selectedUserBuildings[0], viewType: 'map' }))
+        } else
+            setBuildingState((prevState) => ({ ...prevState, viewType: '' }))
+    }, [selectedUserBuildings]);
+
+    const handleDelete = (id: string) => {
         dispatch({
             type: 'DELETE',
             payload: {
                 id: id
             }
         })
+        handleReset();
     }
 
     const handleReset = () => {
         setBuildingState((prevState) => ({ ...prevState, formType: '', viewType: '' }))
     }
 
+    const handleMapLoad = (map: any) => {
+        setBuildingState((prevState) => ({ ...prevState, map: map }))
+    }
     return (
         <Container>
             <Grid container justify="flex-start" spacing={3} >
@@ -79,13 +99,21 @@ export const Index = () => {
                         </AppBar>
                         <Typography component="div" className={classes.listRoot} >
                             {
-                                state?.buildings?.length > 0 && state.buildings.map((building, index) => {
+                                selectedUserBuildings.length > 0 && selectedUserBuildings.map((building, index) => {
                                     return (
-                                        building.userId === state.selectedUser &&
-                                        <Typography component="div" key={index} className={classes.list}>
+                                        <Typography
+                                            component="div"
+                                            key={index}
+                                            className={classes.list}
+                                        >
                                             <Grid container>
-                                                <Grid item xs={10}>
-                                                    <Typography component='span' style={{ marginLeft: 8 }} > {building.name} </Typography>
+                                                <Grid item xs={10}
+                                                      onClick={() => setBuildingState((prevState) => ({ ...prevState, viewType: 'map', selectedBuilding: building }))}
+                                                >
+                                                    <Typography
+                                                        component='span'
+                                                        className={classes.buildingText}
+                                                    > {building.name} </Typography>
                                                 </Grid>
                                                 <Grid item xs={2}>
                                                     <DeleteIcon
@@ -94,7 +122,9 @@ export const Index = () => {
                                                         color={'primary'}
                                                     />
                                                     <EditIcon
-                                                        onClick={() => setBuildingState((prevState) => ({ ...prevState, formType: 'edit', viewType: 'form', selectedBuilding: building }))}
+                                                        onClick={() => {
+                                                            setBuildingState((prevState) => ({ ...prevState, formType: 'edit', viewType: 'form', selectedBuilding: building }))
+                                                        }}
                                                         className={'hiddenButton'}
                                                         color={'primary'} />
                                                 </Grid>
@@ -121,14 +151,20 @@ export const Index = () => {
                     <Typography component="div" className={classes.container} >
                         <AppBar color="primary" position="static">
                             {
-                                formType === 'add' && <span> ADD </span>
+                                viewType === 'form' && formType === 'add' && <span> ADD </span>
                             }
                             {
-                                formType === 'edit' && <span> EDIT </span>
+                                viewType === 'form' && formType === 'edit' && <span> EDIT </span>
+                            }
+                            {
+                                viewType === 'map' && <span> {selectedBuilding?.name} Map View </span>
                             }
                         </AppBar>
                         {
                             viewType === 'form' && <AddBuilding formType={formType} formData={selectedBuilding} clickHandler={handleReset} />
+                        }
+                        {
+                            viewType === 'map' && selectedBuilding && <Map id='myMap' onMapLoad={handleMapLoad} location={selectedBuilding} />
                         }
                     </Typography>
                 </Grid>

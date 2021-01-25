@@ -10,6 +10,9 @@ const useStyles = makeStyles((theme) => ({
         margin: theme.spacing(1),
         minWidth: 150,
     },
+    selectText: {
+        marginLeft: 8
+    }
 }));
 
 export const UserCombo = () => {
@@ -19,14 +22,14 @@ export const UserCombo = () => {
     const { state, dispatch } = useContext(AppContext);
 
     useEffect(() => {
-        data && data.users && data.users.length && setUsers(data.users);
+        data?.users?.length && setUsers(data.users);
     }, [data]);
 
     return (
         <Container>
             <Grid container justify="center">
                 <FormControl className={classes.formControl}>
-                    <InputLabel htmlFor="grouped-native-select" style={{marginLeft: 8}}>Select User</InputLabel>
+                    <InputLabel htmlFor="grouped-native-select" className={classes.selectText}>Select User</InputLabel>
                     <Select
                         value={state.selectedUser}
                         variant="outlined"
